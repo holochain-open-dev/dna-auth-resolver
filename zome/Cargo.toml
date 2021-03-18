@@ -1,0 +1,16 @@
+[package]
+name = "hc_zome_dna_auth_resolver"
+version = "0.1.0"
+authors = ["pospi <pospi@spadgos.com>"]
+edition = "2018"
+
+[dependencies]
+serde = "1"
+# :DUPE: hdk-rust-revid
+hdk = "0.0.100"
+
+hc_zome_dna_auth_resolver_storage = { path = "../storage" }
+
+[lib]
+path = "src/lib.rs"
+crate-type = ["cdylib", "rlib"]
