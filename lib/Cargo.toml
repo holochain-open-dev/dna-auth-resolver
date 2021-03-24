@@ -10,6 +10,7 @@ serde = "1"
 hdk = "0.0.100"
 holo_hash = "0.0.2-alpha.1"
 
+hc_zome_dna_auth_resolver_rpc = { path = "../rpc" }
 hc_zome_dna_auth_resolver_storage = { path = "../storage" }
 
 [lib]

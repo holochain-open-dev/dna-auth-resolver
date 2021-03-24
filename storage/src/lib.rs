@@ -1,22 +1,47 @@
 /**
  * Structures for representing authenticated associations with foreign DNAs.
  *
- * Pretty simple sourcechain layout:
- * The zome uses a `Path` for each `DnaHash` to lookup an associated
- * `AuthedDnaConnection` that stores the credentials used to call into it.
- *
  * @package Holo-REA
  */
 use hdk::prelude::*;
 pub use holo_hash::{DnaHash};
 
-#[hdk_entry(id="dna_auth")]
-#[derive(Clone)]
-pub struct AuthedDnaConnection {
-    pub agent_pubkey: AgentPubKey,
-    pub cap_secret: Option<CapSecret>,
+/// Configuration structure for mapped open permissions, specified in DNA properties
+///
+#[derive(Clone, Serialize, Deserialize, SerializedBytes, PartialEq, Debug)]
+pub struct AvailableCapabilities {
+    pub permissions: Vec<AvailableCapability>,
 }
 
-pub fn get_path_for_dna(dna: &DnaHash) -> Path {
-    Path::from(vec![dna.as_ref().to_vec().into()])
+/// Mapping of externally-facing permission IDs to zome/method call parameters.
+///
+/// Used in DNA properties of receiving DNA, stored as an Entry for lookup in
+/// the requesting DNA.
+///
+#[hdk_entry(id="dna_authed_method_mapping",visibility="private")]
+#[derive(Clone, PartialEq)]
+pub struct AvailableCapability {
+    pub extern_id: String,
+    pub allowed_method: GrantedFunction,
+}
+
+/// Helper to determine CapClaim tag for given requesting DNA hash & permission ID
+///
+pub fn get_tag_for_auth<S>(dna: &DnaHash, permission_id: &S) -> String
+    where S: AsRef<str>,
+{
+    let mut s = permission_id.as_ref().to_string();
+    s.push(':');
+    s.push_str(&String::from_utf8_lossy(dna.as_ref()).to_string());
+    s
+}
+
+/// Helper to handle retrieving linked element entry from an element
+///
+/// :TODO: import this from a well-vetted shared lib
+///
+pub fn try_entry_from_element<'a>(element: Option<&'a Element>) -> ExternResult<&'a Entry> {
+    element
+        .and_then(|el| el.entry().as_option())
+        .ok_or(WasmError::Guest("non-existent element".to_string()))
 }
