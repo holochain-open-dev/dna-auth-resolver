@@ -49,7 +49,7 @@ fn register_dna(DnaRegistration { remote_dna, permission_id, secret }: DnaRegist
 
     match entry.as_cap_grant() {
         Some(CapGrant::RemoteAgent(grant)) => Ok(grant),
-        Some(_) => panic!("Wrong capability type assigned in create_cap_grant()! This should never happen."),
-        None => panic!("Consistency error storing capability grant! This should never happen."),
+        Some(_) => Err(WasmError::Guest("Wrong capability type assigned in create_cap_grant()! This should never happen.".to_string())),
+        None => Err(WasmError::Guest("Consistency error storing capability grant! This should never happen.".to_string())),
     }
 }
