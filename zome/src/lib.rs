@@ -31,10 +31,10 @@ fn register_dna(DnaRegistration { remote_dna, permission_id, secret }: DnaRegist
     if None == cap_fn { return Err(WasmError::CallError(format!("no permission with ID {:?}", permission_id))); }
 
     // create capability grant for the remote requestor, based on the `secret` they provided and the currently executing (local) agent
-    let mut assignees = HashSet::new();
+    let mut assignees = BTreeSet::new();
     assignees.insert(agent_info()?.agent_latest_pubkey);
 
-    let mut allowed_methods = HashSet::new();
+    let mut allowed_methods = BTreeSet::new();
     allowed_methods.insert(cap_fn.unwrap().allowed_method.to_owned());
 
     let cap_header = create_cap_grant(CapGrantEntry::new(
