@@ -24,6 +24,37 @@ pub struct DNAConnectionAuth {
     pub claim: CapClaim,
 }
 
+/// fetches auth for some remote DNA if we are already authed, attempts one otherwise
+///
+pub fn ensure_authed<S>(
+    to_dna: &DnaHash,
+    remote_permission_id: &S,
+) -> ExternResult<DNAConnectionAuth>
+    where S: AsRef<str>,
+{
+    let mut cell_auth = get_auth_data(to_dna, remote_permission_id);
+    match &cell_auth {
+        Ok(_) => {},
+        // transparently request indicated permission if not granted
+        Err(_) => {
+            let _ = make_auth_request(to_dna, remote_permission_id)?;
+
+            // re-check for permissions after request, bail if failed
+            cell_auth = get_auth_data(to_dna, remote_permission_id);
+            match cell_auth {
+                Ok(_) => {},
+                Err(e) => {
+                    return Err(WasmError::Guest(format!("Error in auth handshake from DNA {:?} to DNA {:?}: {:?}", zome_info()?.dna_hash, to_dna.to_owned(), e.to_string())));
+                },
+            }
+        },
+    }
+
+    let auth_data = cell_auth.unwrap();
+
+    Ok(auth_data)
+}
+
 /// trigger an initial authentication request to some remote DNA that is hosting the dna-auth-resolver zome API
 ///
 pub fn make_auth_request<S>(
