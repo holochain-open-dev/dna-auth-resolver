@@ -6,6 +6,12 @@
 use hdk::prelude::*;
 pub use holo_hash::{DnaHash};
 
+// :TODO: remove this, replace with reference to appropriate namespacing of zome config
+#[derive(Clone, Serialize, Deserialize, SerializedBytes, PartialEq, Debug)]
+pub struct DnaConfigSlice {
+    pub remote_auth: AvailableCapabilities,
+}
+
 /// Configuration structure for mapped open permissions, specified in DNA properties
 ///
 #[derive(Clone, Serialize, Deserialize, SerializedBytes, PartialEq, Debug)]

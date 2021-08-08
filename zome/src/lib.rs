@@ -25,8 +25,8 @@ fn register_dna(DnaRegistration { remote_dna, permission_id, secret }: DnaRegist
     let tag = get_tag_for_auth(&remote_dna, &permission_id);
 
     // lookup assigned capability ID
-    let cap_fn_mapping: AvailableCapabilities = zome_info()?.properties.try_into()?;
-    let cap_fn = cap_fn_mapping.permissions.iter().find(|cap| { cap.extern_id == permission_id });
+    let cap_fn_mapping: DnaConfigSlice = zome_info()?.properties.try_into()?;
+    let cap_fn = cap_fn_mapping.remote_auth.permissions.iter().find(|cap| { cap.extern_id == permission_id });
 
     if None == cap_fn { return Err(WasmError::CallError(format!("no permission with ID {:?}", permission_id))); }
 
