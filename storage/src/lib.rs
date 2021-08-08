@@ -6,6 +6,8 @@
 use hdk::prelude::*;
 pub use holo_hash::{DnaHash};
 
+pub const CAP_STORAGE_ENTRY_DEF_ID: &str = "dna_authed_method_mapping";
+
 // :TODO: remove this, replace with reference to appropriate namespacing of zome config
 #[derive(Clone, Serialize, Deserialize, SerializedBytes, PartialEq, Debug)]
 pub struct DnaConfigSlice {
