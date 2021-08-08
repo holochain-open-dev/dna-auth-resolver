@@ -18,6 +18,7 @@ pub const AUTH_ZOME_METHOD: &str = "register_dna";
 /// Authentication data held by the local (calling) DNA about a connection to some remote (receiving) DNA,
 /// enabling it to lookup all necessary parameters to `call` to the correct remote zome.
 ///
+#[derive(Debug)]
 pub struct DNAConnectionAuth {
     pub method: GrantedFunction,
     pub claim: CapClaim,
