@@ -113,6 +113,8 @@ pub fn make_auth_request<S>(
             Err(WasmError::Guest(format!("Auth request unauthorized: {:?} {:?} {:?} for agent {:?}", cell, zome, fname, agent))),
         ZomeCallResponse::NetworkError(msg) =>
             Err(WasmError::Guest(format!("Network error in auth request: {:?}", msg))),
+        ZomeCallResponse::CountersigningSession(msg) =>
+            Err(WasmError::Guest(format!("Countersigning session failed: {:?}", msg))),
     })?;
 
     if None == local_cap_header { return Err(WasmError::Guest("Internal error updating local CapClaim register".into())) }
