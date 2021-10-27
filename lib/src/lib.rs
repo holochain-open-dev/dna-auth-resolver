@@ -44,7 +44,7 @@ pub fn ensure_authed<S>(
             match cell_auth {
                 Ok(_) => {},
                 Err(e) => {
-                    return Err(WasmError::Guest(format!("Error in auth handshake from DNA {:?} to DNA {:?}: {:?}", zome_info()?.dna_hash, to_dna.to_owned(), e.to_string())));
+                    return Err(WasmError::Guest(format!("Error in auth handshake from DNA {:?} to DNA {:?}: {:?}", dna_info()?.hash, to_dna.to_owned(), e.to_string())));
                 },
             }
         },
@@ -73,7 +73,7 @@ pub fn make_auth_request<S>(
         to_cell,
         ZomeName::from(AUTH_ZOME_NAME), FunctionName::from(AUTH_ZOME_METHOD), None,
         DnaRegistration {
-            remote_dna: zome_info()?.dna_hash,
+            remote_dna: dna_info()?.hash,
             permission_id: permission_id.clone(),
             secret,
         },
@@ -173,7 +173,6 @@ pub fn get_auth_data<S>(
         Some(Some((Ok(claim_hash), Some(claim)))) => {
             let links_result = get_links(claim_hash, Some(LinkTag::from(())))?;
             let method_entry_hash = links_result
-                .into_inner()
                 .iter()
                 .map(|l| { l.target.clone() })
                 .next();
