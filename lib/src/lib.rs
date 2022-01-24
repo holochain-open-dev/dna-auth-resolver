@@ -66,11 +66,11 @@ pub fn make_auth_request<S>(
     let permission_id = remote_permission_id.as_ref().to_string();
     let secret = generate_cap_secret()?;
     let local_agent_key = agent_info()?.agent_latest_pubkey;
-    let to_cell = Some(CellId::new(to_dna.clone(), local_agent_key.clone()));
+    let to_cell = CellId::new(to_dna.clone(), local_agent_key.clone());
 
     // make request to the auth zome to ask for remote capability to be granted
     let resp = call(
-        to_cell,
+        CallTargetCell::Other(to_cell),
         ZomeName::from(AUTH_ZOME_NAME), FunctionName::from(AUTH_ZOME_METHOD), None,
         DnaRegistration {
             remote_dna: dna_info()?.hash,
