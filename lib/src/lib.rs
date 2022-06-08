@@ -134,7 +134,7 @@ pub fn make_auth_request<S>(
     })?;
 
     let method_element = get(method_header, GetOptions { strategy: GetStrategy::Latest })?;
-    create_link(cap_claim_hash, get_entry_hash_for_element(method_element.as_ref())?, LinkTag::from(()))?;
+    create_link(cap_claim_hash, get_entry_hash_for_element(method_element.as_ref())?, HdkLinkType::Any, LinkTag::from(()))?;
 
     Ok(())
 }
