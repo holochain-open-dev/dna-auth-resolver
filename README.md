@@ -78,7 +78,7 @@ It works by providing a layer for mapping pre-known request identifiers onto the
 		[package]
 		name = "hc_zome_my_app_auth_resolver"
 		version = "0.1.0"
-		edition = "2018"
+		edition = "2021"
 		private = true
 
 		[dependencies]
@@ -91,12 +91,39 @@ It works by providing a layer for mapping pre-known request identifiers onto the
 		```rust
 		extern crate hc_zome_dna_auth_resolver;
 		```
-	2. Include the built zome artifacts in your DNA bundle, along with the destination zomes.
+	2. Do the same for the `hc_zome_dna_auth_resolver_integrity` crate/zome:  
+		```toml
+		[package]
+		name = "hc_zome_my_app_auth_resolver_integrity"
+		version = "0.1.0"
+		edition = "2021"
+		private = true
+
+		[dependencies]
+		hc_zome_dna_auth_resolver_integrity = {git = "https://github.com/holochain-open-dev/dna-auth-resolver", tag = "X.X.X", package = "hc_zome_dna_auth_resolver_integrity"}
+
+		[lib]
+		path = "src/lib.rs"
+		crate-type = ["cdylib", "rlib"]
+		```
+		```rust
+		extern crate hc_zome_dna_auth_resolver_integrity;
+		```
+	3. Include the built zome artifacts in your DNA bundle, along with the destination zomes.
 	   ```yaml
-	   zomes:
-		 # ...
-		 - name: remote_auth
-		   bundled: "../../target/wasm32-unknown-unknown/release/hc_zome_my_app_auth_resolver.wasm"
+	   # ...
+	   integrity:
+	   # ...
+	     zomes:
+		   - name: remote_auth_integrity
+		     bundled: ../../target/wasm32-unknown-unknown/release/hc_zome_my_app_auth_resolver_integrity.wasm
+	   coordinator:
+	     zomes:
+		   # ...
+		   - name: remote_auth
+		     bundled: ../../target/wasm32-unknown-unknown/release/hc_zome_my_app_auth_resolver.wasm
+			 dependencies:
+			   - name: remote_auth_integrity
 	   ```
 2. Add this configuration block to the DNA properties:  
    ```yaml
@@ -140,7 +167,7 @@ To reference these crates directly from Github, you can use (eg.)
 
 ## Built with this module
 
-[`hdk_records`](https://github.com/holo-rea/holo-rea/tree/feature/sprout/lib/hdk_records) is a high-level record and index management library for highly modular Holochain apps.
+[`hdk_records`](https://github.com/h-rea/hrea/tree/feature/sprout/lib/hdk_records) is a high-level record and index management library for highly modular Holochain apps.
 
 
 

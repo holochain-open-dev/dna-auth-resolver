@@ -2,12 +2,14 @@
 name = "hc_zome_dna_auth_resolver_storage"
 version = "0.1.0"
 authors = ["pospi <pospi@spadgos.com>"]
-edition = "2018"
+edition = "2021"
 
 [dependencies]
 serde = "1"
 hdk = "0.0"
 holo_hash = "0.0"
+
+hc_zome_dna_auth_resolver_integrity = { path = "../integrity" }
 
 [lib]
 crate-type = ["lib"]

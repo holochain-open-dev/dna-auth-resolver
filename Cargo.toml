@@ -1,6 +1,7 @@
 [workspace]
 
 members= [
+  "integrity",
   "lib",
   "storage",
   "zome",

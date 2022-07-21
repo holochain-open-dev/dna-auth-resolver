@@ -1,5 +1,5 @@
 [package]
-name = "hc_zome_dna_auth_resolver"
+name = "hc_zome_dna_auth_resolver_integrity"
 version = "0.1.0"
 authors = ["pospi <pospi@spadgos.com>"]
 edition = "2021"
@@ -7,10 +7,7 @@ edition = "2021"
 [dependencies]
 serde = "1"
 # :DUPE: hdk-rust-revid
-hdk = "0.0"
-
-hc_zome_dna_auth_resolver_rpc = { path = "../rpc" }
-hc_zome_dna_auth_resolver_storage = { path = "../storage" }
+hdi = "0.0"
 
 [lib]
 path = "src/lib.rs"

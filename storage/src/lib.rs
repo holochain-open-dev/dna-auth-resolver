@@ -5,6 +5,7 @@
  */
 use hdk::prelude::*;
 pub use holo_hash::{DnaHash};
+use hc_zome_dna_auth_resolver_integrity::AvailableCapability;
 
 pub const CAP_STORAGE_ENTRY_DEF_ID: &str = "dna_authed_method_mapping";
 
@@ -19,18 +20,6 @@ pub struct DnaConfigSlice {
 #[derive(Clone, Serialize, Deserialize, SerializedBytes, PartialEq, Debug)]
 pub struct AvailableCapabilities {
     pub permissions: Vec<AvailableCapability>,
-}
-
-/// Mapping of externally-facing permission IDs to zome/method call parameters.
-///
-/// Used in DNA properties of receiving DNA, stored as an Entry for lookup in
-/// the requesting DNA.
-///
-#[hdk_entry(id="dna_authed_method_mapping",visibility="private")]
-#[derive(Clone, PartialEq)]
-pub struct AvailableCapability {
-    pub extern_id: String,
-    pub allowed_method: GrantedFunction,
 }
 
 /// Helper to determine CapClaim tag for given requesting DNA hash & permission ID
@@ -48,8 +37,8 @@ pub fn get_tag_for_auth<S>(dna: &DnaHash, permission_id: &S) -> String
 ///
 /// :TODO: import this from a well-vetted shared lib
 ///
-pub fn try_entry_from_element<'a>(element: Option<&'a Element>) -> ExternResult<&'a Entry> {
+pub fn try_entry_from_element<'a>(element: Option<&'a Record>) -> ExternResult<&'a Entry> {
     element
         .and_then(|el| el.entry().as_option())
-        .ok_or(WasmError::Guest("non-existent element".to_string()))
+        .ok_or(wasm_error!(WasmErrorInner::Guest("non-existent element".to_string())))
 }

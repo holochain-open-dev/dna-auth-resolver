@@ -25,10 +25,11 @@ fn register_dna(DnaRegistration { remote_dna, permission_id, secret }: DnaRegist
     let tag = get_tag_for_auth(&remote_dna, &permission_id);
 
     // lookup assigned capability ID
-    let cap_fn_mapping: DnaConfigSlice = dna_info()?.properties.try_into()?;
+    let cap_fn_mapping: DnaConfigSlice = dna_info()?.properties.try_into()
+        .map_err(|e| wasm_error!(WasmErrorInner::Serialize(e)))?;
     let cap_fn = cap_fn_mapping.remote_auth.permissions.iter().find(|cap| { cap.extern_id == permission_id });
 
-    if None == cap_fn { return Err(WasmError::CallError(format!("no permission with ID {:?}", permission_id))); }
+    if None == cap_fn { return Err(wasm_error!(WasmErrorInner::CallError(format!("no permission with ID {:?}", permission_id)))); }
 
     // create capability grant for the remote requestor, based on the `secret` they provided and the currently executing (local) agent
     let mut assignees = BTreeSet::new();
@@ -37,19 +38,19 @@ fn register_dna(DnaRegistration { remote_dna, permission_id, secret }: DnaRegist
     let mut allowed_methods = BTreeSet::new();
     allowed_methods.insert(cap_fn.unwrap().allowed_method.to_owned());
 
-    let cap_header = create_cap_grant(CapGrantEntry::new(
+    let cap_action = create_cap_grant(CapGrantEntry::new(
         tag,
         CapAccess::Assigned { secret, assignees },
         allowed_methods,
     ))?;
 
     // read capability grant back out to return it to the caller
-    let result = get(cap_header, GetOptions { strategy: GetStrategy::Latest })?;
+    let result = get(cap_action, GetOptions { strategy: GetStrategy::Latest })?;
     let entry = try_entry_from_element(result.as_ref())?;
 
     match entry.as_cap_grant() {
         Some(CapGrant::RemoteAgent(grant)) => Ok(grant),
-        Some(_) => Err(WasmError::Guest("Wrong capability type assigned in create_cap_grant()! This should never happen.".to_string())),
-        None => Err(WasmError::Guest("Consistency error storing capability grant! This should never happen.".to_string())),
+        Some(_) => Err(wasm_error!(WasmErrorInner::Guest("Wrong capability type assigned in create_cap_grant()! This should never happen.".to_string()))),
+        None => Err(wasm_error!(WasmErrorInner::Guest("Consistency error storing capability grant! This should never happen.".to_string()))),
     }
 }
