@@ -7,7 +7,7 @@ edition = "2021"
 [dependencies]
 serde = "1"
 # :DUPE: hdk-rust-revid
-hdi = "0.0.14"
+hdi = "0.0"
 
 [lib]
 path = "src/lib.rs"
