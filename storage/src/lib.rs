@@ -5,7 +5,7 @@
  */
 use hdk::prelude::*;
 pub use holo_hash::{DnaHash};
-use hc_zome_dna_auth_resolver_integrity::AvailableCapability;
+use hc_zome_dna_auth_resolver_core::AvailableCapability;
 
 pub const CAP_STORAGE_ENTRY_DEF_ID: &str = "dna_authed_method_mapping";
 
