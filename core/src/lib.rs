@@ -21,15 +21,3 @@ pub struct AvailableCapability {
     pub extern_id: String,
     pub allowed_method: GrantedFunction,
 }
-
-#[hdk_entry_defs(skip_hdk_extern = true)]
-#[unit_enum(EntryTypesUnit)]
-pub enum EntryTypes {
-    #[entry_def(required_validations = 5, visibility = "private")]
-    AvailableCapability(AvailableCapability),
-}
-
-#[hdk_link_types(skip_no_mangle = true)]
-pub enum LinkTypes {
-    AvailableCapability,
-}

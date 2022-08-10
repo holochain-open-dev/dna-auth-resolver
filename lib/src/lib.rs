@@ -12,15 +12,6 @@ pub use hc_zome_dna_auth_resolver_core::*;
 pub use hc_zome_dna_auth_resolver_rpc::*;
 pub use hc_zome_dna_auth_resolver_storage::*;
 
-#[hdk_dependent_entry_types]
-enum EntryZomes {
-    IntegrityEntry(EntryTypes),
-}
-#[hdk_dependent_link_types]
-enum LinkZomes {
-    IntegrityLink(LinkTypes),
-}
-
 // :TODO: make this dynamic so that DNA configurations don't have reserved zome names anymore
 pub const AUTH_ZOME_NAME: &str = "remote_auth";
 pub const AUTH_ZOME_METHOD: &str = "register_dna";
@@ -36,22 +27,33 @@ pub struct DNAConnectionAuth {
 
 /// fetches auth for some remote DNA if we are already authed, attempts one otherwise
 ///
-pub fn ensure_authed<S>(
+pub fn ensure_authed<EN, LT, E, E2, S>(
     to_dna: &DnaHash,
     remote_permission_id: &S,
+    link_type: LT
 ) -> ExternResult<DNAConnectionAuth>
 where
     S: AsRef<str>,
+    // links
+    ScopedLinkType: TryFrom<LT, Error = E>,
+    LT: Clone + LinkTypeFilterExt,
+    // entries
+    EN: TryFrom<AvailableCapability, Error = E>,
+    ScopedEntryDefIndex: for<'a> TryFrom<&'a EN, Error = E2>,
+    EntryVisibility: for<'a> From<&'a EN>,
+    Entry: TryFrom<EN, Error = E>,
+    // links and entries
+    WasmError: From<E> + From<E2>,
 {
-    let mut cell_auth = get_auth_data(to_dna, remote_permission_id);
+    let mut cell_auth = get_auth_data(to_dna, remote_permission_id, link_type.clone());
     match &cell_auth {
         Ok(_) => {}
         // transparently request indicated permission if not granted
         Err(_) => {
-            let _ = make_auth_request(to_dna, remote_permission_id)?;
+            let _ = make_auth_request(to_dna, remote_permission_id, link_type.clone())?;
 
             // re-check for permissions after request, bail if failed
-            cell_auth = get_auth_data(to_dna, remote_permission_id);
+            cell_auth = get_auth_data(to_dna, remote_permission_id, link_type);
             match cell_auth {
                 Ok(_) => {}
                 Err(e) => {
@@ -73,9 +75,21 @@ where
 
 /// trigger an initial authentication request to some remote DNA that is hosting the dna-auth-resolver zome API
 ///
-pub fn make_auth_request<S>(to_dna: &DnaHash, remote_permission_id: &S) -> ExternResult<()>
+/// because this library is more of a mixin, we don't assume to know the LinkTypes or the EntryTypes
+/// (which can only come from the zome since they're based on numbered indexes)
+/// and therefore this method is generic and needs explicit type traits and a specific link_type passed in
+pub fn make_auth_request<EN, LT, E, E2, S>(to_dna: &DnaHash, remote_permission_id: &S, link_type: LT) -> ExternResult<()>
 where
     S: AsRef<str>,
+    // links
+    ScopedLinkType: TryFrom<LT, Error = E>,
+    // entries
+    EN: TryFrom<AvailableCapability, Error = E>,
+    ScopedEntryDefIndex: for<'a> TryFrom<&'a EN, Error = E2>,
+    EntryVisibility: for<'a> From<&'a EN>,
+    Entry: TryFrom<EN, Error = E>,
+    // links and entries
+    WasmError: From<E> + From<E2>,
 {
     let permission_id = remote_permission_id.as_ref().to_string();
     let secret = generate_cap_secret()?;
@@ -166,10 +180,13 @@ where
         )));
     }
 
-    let entry = EntryZomes::IntegrityEntry(EntryTypes::AvailableCapability(AvailableCapability {
+    // use the power of generics and conversion traits to
+    // convert to whatever specific App Entry Type for the Zome
+    // this code is mixed into is, and commit that
+    let entry = EN::try_from(AvailableCapability {
         extern_id: permission_id.clone(),
         allowed_method: method.unwrap().clone(),
-    }));
+    })?;
     let method_action = create_entry(entry)?;
 
     let method_element = get(
@@ -181,7 +198,7 @@ where
     create_link(
         cap_claim_hash,
         get_entry_hash_for_element(method_element.as_ref())?,
-        LinkTypes::AvailableCapability,
+        link_type,
         LinkTag::from(()),
     )?;
 
@@ -190,12 +207,14 @@ where
 
 /// Read capability claim obtained from a previous `make_auth_request()`, in order to make an authenticated cross-DNA call.
 ///
-pub fn get_auth_data<S>(
+pub fn get_auth_data<LT, S>(
     to_registered_dna: &DnaHash,
     remote_permission_id: &S,
+    link_type: LT
 ) -> ExternResult<DNAConnectionAuth>
 where
     S: AsRef<str>,
+    LT: LinkTypeFilterExt,
 {
     let tag = get_tag_for_auth(to_registered_dna, remote_permission_id);
     let no_auth_err = Err(wasm_error!(WasmErrorInner::Guest(format!(
@@ -234,7 +253,7 @@ where
         Some(Some((Ok(claim_hash), Some(claim)))) => {
             let links_result = get_links(
                 claim_hash,
-                LinkTypes::AvailableCapability,
+                link_type,
                 Some(LinkTag::from(())),
             )?;
             let method_entry_hash = links_result.iter().map(|l| l.target.clone()).next();
