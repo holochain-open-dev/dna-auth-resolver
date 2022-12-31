@@ -145,7 +145,7 @@ where
 
             Ok(())
         }
-        ZomeCallResponse::Unauthorized(auth, cell, zome, fname, agent) => {
+        ZomeCallResponse::Unauthorized(_auth, cell, zome, fname, agent) => {
             Err(wasm_error!(WasmErrorInner::Guest(format!(
                 "Auth request unauthorized: {:?} {:?} {:?} for agent {:?}",
                 cell, zome, fname, agent
