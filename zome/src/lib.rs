@@ -41,7 +41,7 @@ fn register_dna(DnaRegistration { remote_dna, permission_id, secret }: DnaRegist
     let cap_action = create_cap_grant(CapGrantEntry::new(
         tag,
         CapAccess::Assigned { secret, assignees },
-        allowed_methods,
+        GrantedFunctions::Listed(allowed_methods),
     ))?;
 
     // read capability grant back out to return it to the caller

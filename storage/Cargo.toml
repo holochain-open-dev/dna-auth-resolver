@@ -6,8 +6,8 @@ edition = "2021"
 
 [dependencies]
 serde = "1"
-hdk = "0.0.152"
-holo_hash = "0.0"
+hdk = "0.1.0-beta-rc.1"
+holo_hash = "0.1.0-beta-rc.0"
 
 hc_zome_dna_auth_resolver_core = { path = "../core" }
 
