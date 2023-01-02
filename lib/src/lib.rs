@@ -30,7 +30,7 @@ pub struct DNAConnectionAuth {
 pub fn ensure_authed<EN, LT, E, E2, S>(
     to_dna: &DnaHash,
     remote_permission_id: &S,
-    link_type: LT
+    link_type: LT,
 ) -> ExternResult<DNAConnectionAuth>
 where
     S: AsRef<str>,
@@ -78,7 +78,11 @@ where
 /// because this library is more of a mixin, we don't assume to know the LinkTypes or the EntryTypes
 /// (which can only come from the zome since they're based on numbered indexes)
 /// and therefore this method is generic and needs explicit type traits and a specific link_type passed in
-pub fn make_auth_request<EN, LT, E, E2, S>(to_dna: &DnaHash, remote_permission_id: &S, link_type: LT) -> ExternResult<()>
+pub fn make_auth_request<EN, LT, E, E2, S>(
+    to_dna: &DnaHash,
+    remote_permission_id: &S,
+    link_type: LT,
+) -> ExternResult<()>
 where
     S: AsRef<str>,
     // links
@@ -109,7 +113,7 @@ where
         },
     )?;
 
-    let mut grant_data: Option<ZomeCallCapGrant> = None;
+    let mut maybe_grant_data: Option<ZomeCallCapGrant> = None;
     let mut local_cap_action: Option<ActionHash> = None;
 
     // handle response from auth zome and store provided capability access tokens
@@ -118,7 +122,7 @@ where
             let remote_grant: ZomeCallCapGrant = data
                 .decode()
                 .map_err(|e| wasm_error!(WasmErrorInner::Serialize(e)))?;
-            grant_data = Some(remote_grant.to_owned());
+            maybe_grant_data = Some(remote_grant.to_owned());
             let remote_cap = remote_grant.access;
 
             match remote_cap {
@@ -141,7 +145,7 @@ where
 
             Ok(())
         }
-        ZomeCallResponse::Unauthorized(cell, zome, fname, agent) => {
+        ZomeCallResponse::Unauthorized(_auth, cell, zome, fname, agent) => {
             Err(wasm_error!(WasmErrorInner::Guest(format!(
                 "Auth request unauthorized: {:?} {:?} {:?} for agent {:?}",
                 cell, zome, fname, agent
@@ -172,37 +176,43 @@ where
     let cap_claim_hash = get_entry_hash_for_element(result.as_ref())?;
 
     // store & link to allowed method list for calling back based on permission
-    let method = grant_data.unwrap().functions.iter().cloned().next();
+    match maybe_grant_data {
+        Some(ZomeCallCapGrant {
+            functions: GrantedFunctions::Listed(list),
+            ..
+        }) if list.iter().cloned().next() != None => {
+            // in this pattern only one method is allowed, per grant
+            // which is why we can just pick the first in the list
+            let method = list.iter().cloned().next();
 
-    if None == method {
-        return Err(wasm_error!(WasmErrorInner::Guest(
+            // use the power of generics and conversion traits to
+            // convert to whatever specific App Entry Type for the Zome
+            // this code is mixed into is, and commit that
+            let entry = EN::try_from(AvailableCapability {
+                extern_id: permission_id.clone(),
+                allowed_method: method.unwrap().clone(),
+            })?;
+            let method_action = create_entry(entry)?;
+
+            let method_element = get(
+                method_action,
+                GetOptions {
+                    strategy: GetStrategy::Latest,
+                },
+            )?;
+            create_link(
+                cap_claim_hash,
+                get_entry_hash_for_element(method_element.as_ref())?,
+                link_type,
+                LinkTag::from(()),
+            )?;
+
+            Ok(())
+        }
+        _ => Err(wasm_error!(WasmErrorInner::Guest(
             "Remote auth registration endpoint authorized no methods".into()
-        )));
+        ))),
     }
-
-    // use the power of generics and conversion traits to
-    // convert to whatever specific App Entry Type for the Zome
-    // this code is mixed into is, and commit that
-    let entry = EN::try_from(AvailableCapability {
-        extern_id: permission_id.clone(),
-        allowed_method: method.unwrap().clone(),
-    })?;
-    let method_action = create_entry(entry)?;
-
-    let method_element = get(
-        method_action,
-        GetOptions {
-            strategy: GetStrategy::Latest,
-        },
-    )?;
-    create_link(
-        cap_claim_hash,
-        get_entry_hash_for_element(method_element.as_ref())?,
-        link_type,
-        LinkTag::from(()),
-    )?;
-
-    Ok(())
 }
 
 /// Read capability claim obtained from a previous `make_auth_request()`, in order to make an authenticated cross-DNA call.
@@ -210,7 +220,7 @@ where
 pub fn get_auth_data<LT, S>(
     to_registered_dna: &DnaHash,
     remote_permission_id: &S,
-    link_type: LT
+    link_type: LT,
 ) -> ExternResult<DNAConnectionAuth>
 where
     S: AsRef<str>,
@@ -251,11 +261,7 @@ where
     match claim {
         // using CapClaim data, locate authenticated method data
         Some(Some((Ok(claim_hash), Some(claim)))) => {
-            let links_result = get_links(
-                claim_hash,
-                link_type,
-                Some(LinkTag::from(())),
-            )?;
+            let links_result = get_links(claim_hash, link_type, Some(LinkTag::from(())))?;
             let method_entry_hash = links_result.iter().map(|l| l.target.clone()).next();
 
             if None == method_entry_hash {
@@ -263,7 +269,7 @@ where
             }
 
             let method_element = get(
-                method_entry_hash.unwrap(),
+                EntryHash::from(method_entry_hash.unwrap()),
                 GetOptions {
                     strategy: GetStrategy::Latest,
                 },

@@ -35,13 +35,13 @@ fn register_dna(DnaRegistration { remote_dna, permission_id, secret }: DnaRegist
     let mut assignees = BTreeSet::new();
     assignees.insert(agent_info()?.agent_latest_pubkey);
 
-    let mut allowed_methods = BTreeSet::new();
-    allowed_methods.insert(cap_fn.unwrap().allowed_method.to_owned());
+    let mut allowed_method = BTreeSet::new();
+    allowed_method.insert(cap_fn.unwrap().allowed_method.to_owned());
 
     let cap_action = create_cap_grant(CapGrantEntry::new(
         tag,
         CapAccess::Assigned { secret, assignees },
-        allowed_methods,
+        GrantedFunctions::Listed(allowed_method),
     ))?;
 
     // read capability grant back out to return it to the caller
