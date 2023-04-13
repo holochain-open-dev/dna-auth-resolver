@@ -8,7 +8,7 @@ edition = "2021"
 serde = "1"
 holo_hash = "0.1.1"
 holochain_zome_types = { version = "0.1.1", default-features = false }
-holochain_serialized_bytes = "0.0.52"
+holochain_serialized_bytes = "0.0.51"
 
 [lib]
 crate-type = ["lib"]
