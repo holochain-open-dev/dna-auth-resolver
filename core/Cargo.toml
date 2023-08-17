@@ -5,9 +5,8 @@ authors = ["pospi <pospi@spadgos.com>"]
 edition = "2021"
 
 [dependencies]
-serde = "1"
-# :DUPE: hdk-rust-revid
-hdi = "0.2.1"
+serde = "*"
+hdi = "*"
 
 [lib]
 path = "src/lib.rs"

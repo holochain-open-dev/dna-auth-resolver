@@ -5,9 +5,9 @@ authors = ["pospi <pospi@spadgos.com>"]
 edition = "2021"
 
 [dependencies]
-serde = "1"
-hdk = "0.1.1"
-holo_hash = "0.1.1"
+serde = "*"
+hdk = "*"
+holo_hash = "*"
 
 hc_zome_dna_auth_resolver_core = { path = "../core" }
 
