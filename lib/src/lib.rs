@@ -269,7 +269,7 @@ where
             }
 
             let method_element = get(
-                EntryHash::from_raw_39(method_entry_hash.unwrap().into_inner()).unwrap(),
+                method_entry_hash.unwrap().into_entry_hash().unwrap(),
                 GetOptions {
                     strategy: GetStrategy::Latest,
                 },
