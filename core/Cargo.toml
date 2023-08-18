@@ -5,8 +5,8 @@ authors = ["pospi <pospi@spadgos.com>"]
 edition = "2021"
 
 [dependencies]
-serde = "*"
-hdi = "*"
+serde = { workspace = true }
+hdi = { workspace = true }
 
 [lib]
 path = "src/lib.rs"

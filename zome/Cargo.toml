@@ -5,8 +5,8 @@ authors = ["pospi <pospi@spadgos.com>"]
 edition = "2021"
 
 [dependencies]
-serde = "*"
-hdk = "*"
+serde = { workspace = true }
+hdk = { workspace = true }
 
 hc_zome_dna_auth_resolver_rpc = { path = "../rpc" }
 hc_zome_dna_auth_resolver_storage = { path = "../storage" }

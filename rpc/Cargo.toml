@@ -5,10 +5,10 @@ authors = ["pospi <pospi@spadgos.com>"]
 edition = "2021"
 
 [dependencies]
-serde = "*"
-holo_hash = "*"
-holochain_zome_types = "*"
-holochain_serialized_bytes = "*"
+serde = { workspace = true }
+holo_hash = { workspace = true }
+holochain_zome_types = { workspace = true }
+holochain_serialized_bytes = { workspace = true }
 
 [lib]
 crate-type = ["lib"]
