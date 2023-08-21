@@ -10,7 +10,7 @@ members= [
 [workspace.dependencies]
 hdi = "0.3.1"
 hdk = "0.2.1"
-serde = "1"
+serde = "1.0.171"
 holochain = "0.2.1"
 holo_hash = "0.2.1"
 holochain_serialized_bytes = "0.0.51"
